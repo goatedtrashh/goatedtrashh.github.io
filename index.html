@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>hiddenhub</title>
+    <title>HTML Game Vault - Final Edition</title>
     
     <style>
         @keyframes rotateArrow {
             from {
                 transform: rotate(0deg);
             }
-            to {;
+            to {
+                transform: rotate(180deg);
             }
         }
 
@@ -31,6 +32,10 @@
             background-attachment: fixed;
             color: #cbd5e1; 
             overflow: auto; 
+        }
+
+        body.fullscreen-mode {
+            overflow: hidden;
         }
             
         #manager-ui { 
@@ -280,7 +285,7 @@
             padding: 20px 0; 
         }
 
-        #file-grid, .modal-grid { 
+        #file-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
             gap: 15px;
@@ -290,26 +295,26 @@
         }
 
         @media (min-width: 480px) {
-            #file-grid, .modal-grid {
+            #file-grid {
                 grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
                 gap: 20px;
             }
         }
 
         @media (min-width: 768px) {
-            #file-grid, .modal-grid {
+            #file-grid {
                 grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             }
         }
 
         @media (min-width: 1024px) {
-            #file-grid, .modal-grid {
+            #file-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
         }
 
         @media (min-width: 1400px) {
-            #file-grid, .modal-grid {
+            #file-grid {
                 grid-template-columns: repeat(5, 1fr);
             }
         }
@@ -417,10 +422,6 @@
             padding-right: 35px;
         }
 
-        #executor-ui.fullscreen .exec-btn { 
-            display: none; 
-        }
-
         /* Pop-up Modal */
         #cat-modal { 
             display: none; 
@@ -460,6 +461,7 @@
             margin-bottom: 20px; 
             flex-wrap: wrap; 
             gap: 10px;
+            flex-shrink: 0;
         }
 
         @media (min-width: 768px) {
@@ -497,6 +499,7 @@
             flex-direction: column;
             gap: 10px;
             width: 100%;
+            flex-shrink: 0;
         }
 
         @media (min-width: 768px) {
@@ -509,19 +512,15 @@
         .modal-grid-wrapper { 
             flex: 1; 
             min-height: 0; 
-            position: relative; 
-            z-index: 1;
-            overflow: visible;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         #modal-grid { 
-            height: 100%; 
-            overflow-y: scroll;
-            overflow-x: visible;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
             gap: 15px;
-            padding: 20px 0;
+            padding: 0 20px 20px 0;
             margin: 0;
             box-sizing: border-box;
         }
@@ -594,6 +593,7 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         @media (min-width: 768px) {
@@ -631,6 +631,7 @@
             flex-direction: column;
             gap: 10px;
             width: 100%;
+            flex-shrink: 0;
         }
 
         @media (min-width: 768px) {
@@ -643,19 +644,15 @@
         .delete-grid-wrapper {
             flex: 1;
             min-height: 0;
-            position: relative;
-            z-index: 1;
-            overflow: visible;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         #delete-grid {
-            height: 100%;
-            overflow-y: scroll;
-            overflow-x: visible;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
             gap: 15px;
-            padding: 20px 0;
+            padding: 0 20px 20px 0;
             margin: 0;
             box-sizing: border-box;
         }
@@ -838,6 +835,30 @@
             z-index: 9999; 
         }
 
+        #executor-ui.fullscreen {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .exec-btn {
+            position: absolute;
+            top: 20px;
+            z-index: 10001;
+            gap: 3px;
+        }
+
+        .exec-btn:first-of-type {
+            left: 20px;
+        }
+
+        .exec-btn:last-of-type {
+            left: 100px;
+        }
+
+        #executor-ui.fullscreen .exec-btn {
+            display: none;
+        }
+
         iframe { 
             width: 100%; 
             height: 100%; 
@@ -889,6 +910,7 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@0.1"></script>
 </head>
 <body>
 
@@ -967,9 +989,9 @@
 </div>
 
 <div id="executor-ui">
-    <button class="exec-btn" onclick="closeExec()" style="position:absolute; top:20px; left:20px; z-index:10001;">Back</button>
-    <button class="exec-btn" onclick="toggleFullscreen()" style="position:absolute; top:20px; left:90px; z-index:10001;">Fullscreen</button>
-    <iframe id="viewer"></iframe>
+    <button class="exec-btn" onclick="closeExec()">← Back</button>
+    <button class="exec-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    <div id="swf-container" style="width:100%; height:100%;"></div>
 </div>
 
 <script id="library-data" type="application/json">[]</script>
@@ -1053,9 +1075,9 @@
         const cats = ['All', ...getUniqueCats()];
         menu.innerHTML = cats.map(c => {
             if (c === 'All') {
-                return `<div class="cat-option"><span>${c}</span></div>`;
+                return `<div class="cat-option" onclick="setCategory('${c}')"><span>${c}</span></div>`;
             }
-            return `<div class="cat-option"><span>${c}</span><button class="cat-delete-btn" onclick="deleteCategory('${c}', event)">×</button></div>`;
+            return `<div class="cat-option" onclick="setCategory('${c}')"><span>${c}</span><button class="cat-delete-btn" onclick="deleteCategory('${c}', event)">×</button></div>`;
         }).join('');
         document.getElementById('cat-display').innerText = "Category: " + currentCategory;
     }
@@ -1202,120 +1224,139 @@
         deleteSelection = [];
     }
 
-    function renderDeleteGrid() {
-        const query = (document.getElementById('delete-search')?.value || '').toLowerCase();
-        const filtered = deleteSelection.filter(f => f.name.toLowerCase().includes(query));
-        
-        document.getElementById('delete-grid').innerHTML = filtered.map((item, i) => `
-            <div class="file-hitbox ${item.selected ? 'selected' : ''}" onclick="toggleDeleteSelect(${deleteSelection.indexOf(item)})">
-                <div class="file-box">
-                    <div class="file-name">${item.name}</div>
-                    <div class="file-cat">${item.category || 'General'}</div>
-                </div>
-            </div>`).join('');
+    function closeModal() {
+        document.getElementById('cat-modal').style.display = 'none';
+        pendingFiles = [];
     }
 
-    function toggleDeleteSelect(i) {
-        deleteSelection[i].selected = !deleteSelection[i].selected;
-        renderDeleteGrid();
-    }
-
-    function toggleAllDelete() {
-        const all = deleteSelection.some(f => !f.selected);
-        deleteSelection.forEach(f => f.selected = all);
-        renderDeleteGrid();
-    }
-
-    function deleteSelected() {
-        const indicesToDelete = deleteSelection
-            .filter(item => item.selected)
-            .map(item => item.idx)
-            .sort((a, b) => b - a);
-        
-        indicesToDelete.forEach(idx => {
-            fileList.splice(idx, 1);
-        });
-
-        saveLibrary();
-        closeDeleteModal();
-        renderGrid();
-        renderCatMenu();
-    }
-
-    function toggleSelect(i) { 
-        pendingFiles[i].selected = !pendingFiles[i].selected; 
-        renderModalGrid(); 
-    }
-
-    function toggleAllPending() { 
-        const all = pendingFiles.some(f => !f.selected); 
-        pendingFiles.forEach(f => f.selected = all); 
-        renderModalGrid(); 
-    }
-
-    function applyBulkCategory() {
-        const finalCat = currentBulkCategory || 'General';
-        if (!finalCat) return;
-
-        pendingFiles.forEach(f => {
-            if (f.selected) fileList.push({ name: f.name, content: f.content, category: finalCat });
-        });
-        pendingFiles = pendingFiles.filter(f => !f.selected);
-        saveLibrary();
-        renderCatMenu();
-        if (pendingFiles.length === 0) { closeModal(); return; }
+    function toggleSelect(idx) {
+        pendingFiles[idx].selected = !pendingFiles[idx].selected;
         renderModalGrid();
     }
 
-    function closeModal() { 
-        document.getElementById('cat-modal').style.display = 'none'; 
-        renderGrid(); 
+    function toggleAllPending() {
+        const allSelected = pendingFiles.every(f => f.selected);
+        pendingFiles.forEach(f => f.selected = !allSelected);
+        renderModalGrid();
     }
 
-    function toggleSelect(i) { 
-        pendingFiles[i].selected = !pendingFiles[i].selected; 
-        renderModalGrid(); 
+    function toggleAllDelete() {
+        const allSelected = deleteSelection.every(f => f.selected);
+        deleteSelection.forEach(f => f.selected = !allSelected);
+        renderDeleteGrid();
+    }
+
+    function renderDeleteGrid() {
+        const query = (document.getElementById('delete-search')?.value || '').toLowerCase();
+        const filtered = deleteSelection.filter(f => f.name.toLowerCase().includes(query));
+        document.getElementById('delete-grid').innerHTML = filtered.map(f => `
+            <div class="file-hitbox ${f.selected ? 'selected' : ''}" onclick="toggleDeleteSelect(${f.idx})">
+                <div class="file-box"><div class="file-name">${f.name}</div><div class="file-cat">${f.category || 'General'}</div></div>
+            </div>`).join('');
+    }
+
+    function toggleDeleteSelect(idx) {
+        const item = deleteSelection.find(f => f.idx === idx);
+        if (item) item.selected = !item.selected;
+        renderDeleteGrid();
+    }
+
+    function applyBulkCategory() {
+        pendingFiles.filter(f => f.selected).forEach(f => {
+            fileList.push({ name: f.name, content: f.content, category: currentBulkCategory });
+        });
+        saveLibrary();
+        renderCatMenu();
+        renderGrid();
+        closeModal();
+    }
+
+    function deleteSelected() {
+        const toDelete = deleteSelection.filter(f => f.selected).map(f => f.idx).sort((a, b) => b - a);
+        toDelete.forEach(idx => fileList.splice(idx, 1));
+        saveLibrary();
+        renderCatMenu();
+        renderGrid();
+        closeDeleteModal();
     }
 
     function deleteGame(idx, event) {
         event.stopPropagation();
-        fileList.splice(idx, 1);
-        saveLibrary();
-        renderGrid();
-        renderCatMenu();
+        showConfirmDialog('Delete Game?', `Are you sure you want to delete "${fileList[idx].name}"?`, () => {
+            fileList.splice(idx, 1);
+            saveLibrary();
+            renderCatMenu();
+            renderGrid();
+        });
     }
 
     function runFile(idx) {
-        document.getElementById('executor-ui').style.display = 'block';
-        document.getElementById('viewer').srcdoc = `<script>window.onbeforeunload=null;<\/script>` + fileList[idx].content;
+        const file = fileList[idx];
+        const content = file.content;
+        
+        // Check if it's a SWF file
+        if (content.includes('FWS') || content.includes('CWS')) {
+            // It's a SWF file - use Ruffle
+            const binaryString = atob(btoa(content));
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            const blob = new Blob([bytes], { type: 'application/x-shockwave-flash' });
+            const url = URL.createObjectURL(blob);
+            
+            const container = document.getElementById('swf-container');
+            container.innerHTML = `<ruffle-player src="${url}" style="width:100%; height:100%;"></ruffle-player>`;
+            document.getElementById('executor-ui').style.display = 'block';
+        } else {
+            // It's HTML - use iframe with data URL
+            const dataUrl = 'data:text/html;charset=UTF-8,' + encodeURIComponent(content);
+            const iframe = document.createElement('iframe');
+            iframe.src = dataUrl;
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            
+            const container = document.getElementById('swf-container');
+            container.innerHTML = '';
+            container.appendChild(iframe);
+            document.getElementById('executor-ui').style.display = 'block';
+        }
     }
 
-    function closeExec() { 
-        document.getElementById('executor-ui').style.display = 'none'; 
-        document.getElementById('viewer').srcdoc = ''; 
+    function closeExec() {
+        document.getElementById('executor-ui').style.display = 'none';
+        document.getElementById('swf-container').innerHTML = '';
+        document.getElementById('executor-ui').classList.remove('fullscreen');
     }
 
     function toggleFullscreen() {
-        const exec = document.getElementById('executor-ui');
-        if (!document.fullscreenElement) exec.requestFullscreen();
-        else document.exitFullscreen();
+        document.getElementById('executor-ui').classList.toggle('fullscreen');
     }
 
     function downloadLibrary() {
-        document.getElementById('library-data').textContent = JSON.stringify(fileList);
-        saveLibrary();
-        const blob = new Blob(["<!DOCTYPE html>\n" + document.documentElement.outerHTML], { type: 'text/html' });
-        const a = document.createElement('a'); 
-        a.href = URL.createObjectURL(blob); 
-        a.download = "MyGameVault.html"; 
+        const data = JSON.stringify(fileList, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'game-vault-backup.json';
         a.click();
+        URL.revokeObjectURL(url);
     }
 
-    window.onclick = e => { 
-        if (!e.target.matches('.cat-trigger')) document.getElementById('cat-menu').classList.remove('open');
-        if (!e.target.matches('.bulk-cat-trigger')) document.getElementById('bulk-cat-menu').classList.remove('open');
-    }
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.cat-selector-wrapper')) {
+            document.getElementById('cat-menu').classList.remove('open');
+            document.getElementById('cat-display').classList.remove('open');
+        }
+        if (!e.target.closest('.bulk-cat-selector-wrapper')) {
+            document.getElementById('bulk-cat-menu').classList.remove('open');
+            document.getElementById('bulk-cat-display').classList.remove('open');
+        }
+    });
 
+    renderCatMenu();
     loadFromDb().then(() => {
         renderCatMenu();
         renderGrid();
